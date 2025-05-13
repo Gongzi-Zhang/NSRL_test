@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+'''
+plot pedestal from a json file
+'''
+
+import os
+import sys
+import json
+import matplotlib.pyplot as plt
+from utilities import *
+import zdc
+
+config = zdc.config
+
+def plot(pedFile, outputDir = '.'):
+    if not os.path.exists(pedFile):
+        logger.error(f"File {pedFile} doesn't exsit")
+        return
+
+    # load pedestal data
+    with open(pedFile, 'r') as f:
+        ped = json.load(f)
+
+    # plot
+    plt.figure(figsize=(10, 6))
+    for gain in {'LG', 'HG'}:
+        values = ped[gain]
+        channels = []
+        mean = []
+        rms = []
+        for ch, [m, r] in values.items():
+            sipmCh = config['caen2sipm'][int(ch)] 
+            if sipmCh == -1:
+                continue
+            channels.append(sipmCh))
+            mean.append(m)
+            rms.append(r)
+
+        plt.plot(channels, mean, marker='o', color='b' )
+        plt.xlabel('Channel')
+        plt.ylabel('Mean [ADC]')
+        plt.title(f'{gain} Pedestal')
+        plt.grid()
+        plt.savefig(f'{outputDir}/{gain}_ped.png')
+
+
+        plt.clf()
+        plt.plot(channels, rms, marker='o', color='b' )
+        plt.xlabel('Channel')
+        plt.ylabel('RMS [ADC]')
+        plt.title(f'{gain} Pedestal')
+        plt.grid()
+        plt.savefig(f'{outputDir}/{gain}_ped_rms.png')
+
+def usage():
+    print(sys.argv[0] + ' -p ped.json [-o output_dir]')
+    print('\t-h: print this help message')
+    print('\t-p: input ped json file')
+    print('\t-o: ooutput dir for plots')
+
+if __name__ == '__main__':
+    # read in command line arguments
+    i=1
+    outDir = '.'
+    pedFile = ''
+    while i<len(sys.argv):
+        if '-h' == sys.argv[i]:
+            usage()
+            exit(0)
+        elif '-i' == sys.argv[i]:
+            pedFile = sys.argv[i+1]
+            i += 1
+        elif '-o' == sys.argv[i]:
+            outDir = sys.argv[i+1]
+            i += 1
+        else:
+            logger.error(f'Unknown argument {sys.argv[i]}')
+            exit(1)
+        i += 1
+
+    plot(pedFile, outDir)

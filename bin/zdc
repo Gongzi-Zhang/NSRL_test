@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+import sys
+import argparse
+import subprocess
+from utilities import *
+import zdc 
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('run_number', type=int, help='run number')
+    subparsers = parser.add_subparsers(dest='subcommand', required=True)
+    
+    parser_ptrg = subparsers.add_parser('ptrg', help='parse a ptrg run')
+    parser_mip = subparsers.add_parser('mip', help='parse a mip run')
+    parser_convert = subparsers.add_parser('convert', help='convert a run')
+    parser_calibrate = subparsers.add_parser('calibrate', help='calibrate a run')
+    parser_QA = subparsers.add_parser('QA', help='make QA plots for a run')
+
+    args = parser.parse_args()
+
+    run = args.run_number
+    if (not run):
+        logger.fatal('No run specified')
+        exit(1)
+
+    db = zdc.DB()
+    binDir = f"zdc.config['ZDCROOT']/bin"
+    dataDir = f"zdc.config['ZDCROOT']/data"
+
+    runType = db.getRunType(run)
+    runFlag = db.getRunFlag(run)
+    listFile = zdc.getListFile(run)
+
+    if (runFlag != 'good'):
+        logger.error(f'Not a good run: {run}')
+        exit(2)
+
+    if args.subcommand == 'ptrg':
+        if runType != "ptrg":
+            logger.error(f'Not a ptrg run: {run}')
+            exit(4)
+        cmd = f'{binDir}/parse_ptrg {listFile} Run${run} {dataDir}'
+        result = subprocess.run(cmd, shell=True)
+
+        figDir = f'{zdc.config["ZDCROOT"]}/figures/Run${run}'
+        if not os.path.exists(figDir):
+            os.mkdir(figDir)
+        cmd = f'{binDir}/plot_ptrg {pedFile} {figDir}'
+        result = subprocess.run(cmd, shell=True)
+    elif args.subcommand == 'mip':
+        if runType != 'mip':
+            logger.error(f'Not a MIP run: {run}')
+            exit(4)
+    elif args.subcommand == 'convert':
+        if runType != 'data':
+            logger.error(f'Not a data run: {run}')
+            exit(4)
+        cmd = f'{binDir}/convert -l {listFile} -o {dataDir}/Run${run}.root'
+        result = subprocess.run(cmd, shell=True)
+
+    exit(0)
