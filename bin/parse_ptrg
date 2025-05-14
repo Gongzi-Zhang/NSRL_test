@@ -23,7 +23,7 @@ if __name__ == '__main__':
             usage()
             exit(0)
         elif '-l' == sys.argv[i]:
-            listFile = int(sys.argv[i+1])
+            listFile = sys.argv[i+1]
             i += 1
         elif '-p' == sys.argv[i]:
             outPrefix = sys.argv[i+1]
@@ -36,6 +36,6 @@ if __name__ == '__main__':
             exit(1)
         i += 1
 
-    parser = parsePtrg(listFile, outputPrefix, outDir)                                                   
+    parser = parsePtrg(listFile, outPrefix, outDir)                                                   
     parser.parse()                                                                                       
     parser.fit()    

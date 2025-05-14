@@ -409,6 +409,47 @@ def doQuery():
     sql = input('input the sql query: ').strip()
     showQuery(executeSql(sql))
 
+# database
+class DB:
+    def __init__(self):
+        createConnection(DBName)
+
+    def query(self, cond, fields="Run"):
+        # !!! check fields !!!
+        sql = f'''SELECT {fields} FROM {TableName} WHERE {cond};'''
+        cursor = executeSql(sql)
+        rows = cursor.fetchall()
+        if rows is None:
+            logger.error(f'no result from the query: {sql}, please check it')
+            return False
+
+        result = {column[0]: [] for column in cursor.description}
+        for row in rows:
+            for idx, column in enumerate(cursor.description):
+                result[column[0]].append(row[idx])
+
+        return result
+
+    def getRunValue(self, run, field):
+        cond = f'Run = {run}'
+        values = self.query(cond, field)
+        if values:
+            return values[field][0]
+        else:
+            return False
+        
+    def getRunType(self, run):
+        return self.getRunValue(run, 'Type')
+
+    def getRunFlag(self, run):
+        return self.getRunValue(run, 'Flag')
+
+    def getRunPedRun(self, run):
+        return int(self.getRunValue(run, 'PedRun'))
+
+    def getRunStartTime(self, run):
+        return self.getRunValue(run, 'StartTime')
+
 
 if __name__ == '__main__':
     if not createConnection(DBName):

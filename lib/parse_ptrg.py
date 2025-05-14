@@ -25,22 +25,22 @@ class parsePtrg:
 
         self.dataDir = dataDir
         self.outFile = f'{dataDir}/{outputPrefix}_hist.root'
+        logger.info(f'output hist: {self.outFile}')
 
         self.pedFile = f'{dataDir}/{outputPrefix}_ped.json' 
         logger.info(f'output ped: {self.pedFile}')
 
         self.h1 = {}
-        self.gPed = {}
-        self.gPedRms = {}
         self.func = {}
-        xmax = {'LG': 500, 'HG': 1000}
-        for gain in {'LG', 'HG'}:
-            self.func[gain] = ROOT.TF1(gain, "gaus", 0, xmax[gain])
-            self.gPed[gain] = ROOT.TGraphErrors()
-            self.gPedRms[gain] = ROOT.TGraph()
-            for ch in range(0, zdc.config['nSiPMChannels']):
+        self.xmax = {'LG': 400, 'HG': 800}
+        for gain in ['LG', 'HG']:
+            for ch in range(0, zdc.config['nCAENChannels']):
                 hname = f'Ch_{ch}_{gain}'
-                self.h1[hname] = ROOT.TH1F(hname, hname, 250, 0, xmax[gain])
+                self.h1[hname] = ROOT.TH1F(hname, hname, 200, 0, self.xmax[gain])
+
+        for bd in range(0, zdc.config['nCAENs']):
+            hname = f'Bd_{bd}_rate'
+            self.h1[hname] = ROOT.TH1F(hname, hname, 100, 0, 100)
 
         ROOT.gROOT.SetBatch(1)
 
@@ -54,16 +54,26 @@ class parsePtrg:
             bd = 0
             LG = 0
             HG = 0
+            TS = {}
+            for bd in range(0, zdc.config['nCAENs']):
+                TS[bd] = -9999e10
 
             for line in fin:
+                ts = 0
                 line = line.strip()
                 values = line.split()
-                if 6 == len(values):    
+                if 7 == len(values) :
+                    bd = int(values[0])
+                    ch = int(values[1])
+                    LG = int(values[2])
+                    HG = int(values[3])
+                    ts = float(values[4])
+                elif 6 == len(values):    
                     bd = int(values[2])
                     ch = int(values[3])
                     LG = int(values[4])
                     HG = int(values[5])
-                elif 4 == len(values) or 7 == len(values):
+                elif 4 == len(values):
                     bd = int(values[0])
                     ch = int(values[1])
                     LG = int(values[2])
@@ -74,31 +84,33 @@ class parsePtrg:
                     continue
 
                 ch += 64*bd
-                self.h1[f'Ch_{ch}_LG'].Fill(LG) 
-                self.h1[f'Ch_{ch}_HG'].Fill(HG) 
+                if 0 < LG and LG < self.xmax['LG']:
+                    self.h1[f'Ch_{ch}_LG'].Fill(LG) 
+                if 0 < HG and HG < self.xmax['HG']:
+                    self.h1[f'Ch_{ch}_HG'].Fill(HG) 
+
+                if (ts != 0):
+                    self.h1[f'Bd_{bd}_rate'].Fill(1e6/(ts - TS[bd]))
+                    TS[bd] = ts
 
     def fit(self):
         ped = {}
-        for gain in {'LG', 'HG'}:
+        for gain in ['LG', 'HG']:
             ped[gain] = {}
-            f = self.func[gain]
-            ipoint = 0
-            for ch in range(0, 64):
+            for ch in range(0, zdc.config["nCAENChannels"]):
                 name = f'Ch_{ch}_{gain}'
                 h = self.h1[name]
+                f = ROOT.TF1(gain, "gaus", 0, h.GetMean()+100)
                 f.SetParameters(h.GetMaximum(), h.GetMean(), h.GetRMS())
-                h.Fit(f, "q")
+                f.SetParLimits(1, 0, h.GetMean()+50)
+                h.Fit(f, "qR", "", 0, h.GetMean()+100)
                 mean = f.GetParameter(1)
                 rms  = f.GetParameter(2)
                 if (mean < 50):
-                    logger.warning(f"low pedestal mean in channel {ch}: {mean}")
+                    logger.warning(f"low pedestal mean in channel {ch} {gain}: {mean}")
 
                 # ped[gain][ch] = {"m": mean, "r": rms}
                 ped[gain][ch] = [mean, rms]
-                self.gPed[gain].SetPoint(ipoint, ch, mean)
-                self.gPed[gain].SetPointError(ipoint, 0, rms)
-                self.gPedRms[gain].SetPoint(ipoint, ch, rms)
-                ipoint += 1
 
         # json output
         with open(self.pedFile, 'w') as f:

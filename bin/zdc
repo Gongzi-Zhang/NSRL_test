@@ -5,6 +5,7 @@ import sys
 import argparse
 import subprocess
 from utilities import *
+from db import DB
 import zdc 
 
 if __name__ == '__main__':
@@ -25,7 +26,7 @@ if __name__ == '__main__':
         logger.fatal('No run specified')
         exit(1)
 
-    db = zdc.DB()
+    db = DB()
     binDir = f"zdc.config['ZDCROOT']/bin"
     dataDir = f"zdc.config['ZDCROOT']/data"
 

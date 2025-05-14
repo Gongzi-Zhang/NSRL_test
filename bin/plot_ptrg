@@ -24,8 +24,8 @@ def plot(pedFile, outputDir = '.'):
         ped = json.load(f)
 
     # plot
-    plt.figure(figsize=(10, 6))
-    for gain in {'LG', 'HG'}:
+    # plt.figure(figsize=(10, 6))
+    for gain in ['LG', 'HG']:
         values = ped[gain]
         channels = []
         mean = []
@@ -34,25 +34,27 @@ def plot(pedFile, outputDir = '.'):
             sipmCh = config['caen2sipm'][int(ch)] 
             if sipmCh == -1:
                 continue
-            channels.append(sipmCh))
+            channels.append(sipmCh)
             mean.append(m)
             rms.append(r)
 
-        plt.plot(channels, mean, marker='o', color='b' )
-        plt.xlabel('Channel')
-        plt.ylabel('Mean [ADC]')
-        plt.title(f'{gain} Pedestal')
-        plt.grid()
-        plt.savefig(f'{outputDir}/{gain}_ped.png')
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+        ax1.scatter(channels, mean, marker='o', color='b' )
+        # ax1.xlabel('SiPM Channel')
+        ax1.set_ylabel('Mean [ADC]')
+        ax1.set_title(f'{gain} Pedestal')
+        ax1.grid()
+        # plt.savefig(f'{outputDir}/{gain}_ped.png')
 
 
-        plt.clf()
-        plt.plot(channels, rms, marker='o', color='b' )
-        plt.xlabel('Channel')
-        plt.ylabel('RMS [ADC]')
-        plt.title(f'{gain} Pedestal')
-        plt.grid()
-        plt.savefig(f'{outputDir}/{gain}_ped_rms.png')
+        ax2.scatter(channels, rms, marker='o', color='b' )
+        ax2.set_xlabel('SiPM Channel')
+        ax2.set_ylabel('RMS [ADC]')
+        ax2.grid()
+
+        fig.subplots_adjust(hspace=0)
+        fig.savefig(f'{outputDir}/{gain}_ped.png')
+        fig.clf()
 
 def usage():
     print(sys.argv[0] + ' -p ped.json [-o output_dir]')
@@ -69,7 +71,7 @@ if __name__ == '__main__':
         if '-h' == sys.argv[i]:
             usage()
             exit(0)
-        elif '-i' == sys.argv[i]:
+        elif '-p' == sys.argv[i]:
             pedFile = sys.argv[i+1]
             i += 1
         elif '-o' == sys.argv[i]:
