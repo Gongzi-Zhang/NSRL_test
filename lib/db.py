@@ -79,10 +79,10 @@ def checkValue(field, value):
         else:
             logger.error(f'Invalid run type: {value}. Allowed types: {TYPES}')
     elif 'Channels' == field:
-        if 1 <= value and value <= 300:
+        if 1 <= value and value <= 560:
             return True
         else:
-            logger.error(f'Invalid channel number: {value}. Allowed range [1, 300]')
+            logger.error(f'Invalid channel number: {value}. Allowed range [1, 560]')
 
     return False
 

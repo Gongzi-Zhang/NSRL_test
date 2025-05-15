@@ -21,12 +21,12 @@ do
 	${ROOT}/bin/parse_ptrg -l $list_file -p "Run${run}" -d ${ROOT}/data
 	ped_file=$(getFile "Run${run}_ped.json")
 	[ -d $fig_dir ] || mkdir -p $fig_dir
-	${ROOT}/bin/plot_ptrg -p $list_file -p $ped_file -o ${fig_dir}
+	${ROOT}/bin/plot_ptrg -p $ped_file -o ${fig_dir}
     elif [ "$run_type" = "mip" ]; then
 	${ROOT}/bin/parse_mip -l $list_file -p "Run${run}" -d ${ROOT}/data
-	mip_file=$(getFile "Run${run}_mip.json")
-	[ -d $fig_dir ] || mkdir -p $fig_dir
-	${ROOT}/bin/plot_mip -p $list_file -p $mip_file -o ${fig_dir}
+	# mip_file=$(getFile "Run${run}_mip.json")
+	# [ -d $fig_dir ] || mkdir -p $fig_dir
+	# ${ROOT}/bin/plot_mip -m $mip_file -o ${fig_dir}
     elif [ "$run_type" = "data" ]; then
 	${ROOT}/bin/zdc convert $run
 	${ROOT}/bin/zdc calibrate $run
@@ -35,7 +35,9 @@ do
     if [ $? -ne 0 ]; then
 	${ROOT}/bin/zdcDB update --run $run --field Flag --value bad
     else
-	scp -qr ${ROOT}/figures/${run}/ weibin@cali:public/NSRL_test/figures/
+	scp -qr ${ROOT}/figures/${run}/ weibin@gpu:public/NSRL_test/figures/
     fi
+
+    scp $list_file weibin@gpu:public/NSRL_test/data/
     shift
 done
