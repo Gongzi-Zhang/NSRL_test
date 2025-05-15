@@ -1,0 +1,156 @@
+#!/bin/bash
+
+script=$(realpath -- ${BASH_SOURCE[0]})
+ROOT=$(dirname $script)/..
+source ${ROOT}/setup.sh
+source ${ROOT}/lib/zdc.sh
+
+function usage
+{
+    logger info "usage:\n\t$script run_Info.txt [run_type] [note]"
+}
+
+function extract_datetime
+{
+    dt=$1; shift
+    day=$(echo $dt | cut -d'/' -f1)
+    month=$(echo $dt | cut -d'/' -f2)
+    year=$(echo $dt | cut -d' ' -f1 | cut -d'/' -f3)
+    time=$(echo $dt | cut -d' ' -f2)
+    echo "$year-$month-$day $time"
+}
+
+if [ $# -lt 1 ]; then
+    logger error "At least 1 arguments needed" >&2
+    usage
+    exit
+fi
+
+config=${ZDCROOT}/database/config.cfg
+
+# info parameters
+info_file=$1; shift
+list_file=${info_file/Info/list}
+sync_file=${info_file/Info/sync}
+if ! [ -f $list_file ]; then
+    logger fatal "no list file for run $info_file" >&2
+    exit 4
+fi
+nline=$(wc -l < $list_file)
+if [ $nline -lt 100 ]; then
+    logger warning "no event recorded in run $info_file, skip it" >&2
+    mv $info_file $list_file $sync_file $ROOT/work
+    exit 0
+fi
+
+run_type=data
+if grep -q '\<Type\>' ${config}; then
+    run_type=$(grep '\<Type\>' ${config} | cut -d':' -f2)
+fi
+if [ $# -ge 1 ]; then
+    run_type=$1
+    shift
+fi
+
+Flag='good'
+if [ $# -ge 1 ]; then
+    Flag=$1
+    shift
+fi
+Note=''
+if [ $# -ge 1 ]; then
+    Note=$1
+    shift
+fi
+
+StartTime='00'
+StopTime=$(ls -l --time-style='+%Y%m%d %H:%M' $list_file | cut -d' ' -f6-7)
+Length=-1
+Vbias=0
+
+if [ -f $info_file ]; then
+    StartTime=$(grep '\<Start Time\>' $info_file | cut -d ':' -f2-)
+    StartTime=$(extract_datetime "$StartTime")
+    StopTime=$(grep '\<Stop Time\>' $info_file | cut -d ':' -f2-)
+    StopTime=$(extract_datetime "$StopTime")
+    Length=$(grep '\<Elapsed time\>' $info_file | cut -d ' ' -f4)
+    Length=$(perl -e "printf(\"%d\", $Length/60)")
+    Vbias=$(grep 'HV_Vbias' ${info_file} | awk '{print $2}')
+fi
+
+Channels=$(grep '\<Channels\>' ${config} | cut -d':' -f2)
+Trigger=$(grep '\<Trigger\>' ${config} | cut -d':' -f2)
+if [ "$run_type" = "ptrg" ]; then
+    Trigger=0
+fi
+T1=$(grep '\<T1\>' ${config} | cut -d':' -f2)
+T2=$(grep '\<T2\>' ${config} | cut -d':' -f2)
+Events=-1
+if [ -f $sync_file ]; then
+    Events=""
+    i=1
+    while [ -z $Events ]; do
+	Events=$(tail -n $i $sync_file | head -n1 | awk '{print $3}')
+	let i++
+    done
+fi
+LG=$(grep '\<LG\>' ${config} | cut -d':' -f2)
+HG=$(grep '\<HG\>' ${config} | cut -d':' -f2)
+Ped=$(grep '\<Ped\>' ${config} | cut -d':' -f2)
+Size=$(ls -lh --block-size=1MiB $list_file | awk '{print $5}')
+PedRun=$(grep '\<PedRun\>' ${config} | cut -d':' -f2)
+if [ "$run_type" = "ptrg" ]; then
+    PedRun=-1
+fi
+MIPRun=$(grep '\<MIPRun\>' ${config} | cut -d':' -f2)
+if [ "$run_type" = "ptrg" ]; then
+    MIPRun=-1
+fi
+TrgRate=$(grep '\<TrgRate\>' ${config} | cut -d':' -f2)
+if [ "$run_type" = "ptrg" ] || [ "$run_type" = "mip" ]; then
+    TrgRate=0
+fi
+latestId=$(zdcDB latest | cut -d':' -f2)
+
+logger info "run ${info_file} will be insert as run $((latestId+1))"
+
+${ROOT}/bin/zdcDB insert \
+    --Type $run_type	\
+    --Flag $Flag	\
+    --StartTime "$StartTime" \
+    --StopTime "$StopTime"   \
+    --Length $Length	    \
+    --Channels $Channels    \
+    --Trigger $Trigger	    \
+    --T1 ${T1}		    \
+    --T2 ${T2}		    \
+    --Events $Events	    \
+    --LG $LG	    \
+    --HG $HG	    \
+    --Ped $Ped	    \
+    --Vbias $Vbias  \
+    --Size $Size    \
+    --PedRun $PedRun	    \
+    --MIPRun $MIPRun	    \
+    --TrgRate $TrgRate	    \
+    --Note "$Note"
+if [ $? -ne 0 ]; then
+   logger error "Failed to insert the record" >&2
+   exit 4
+fi
+logger info "successfully insert run ${info_file} into database as run $((latestId+1))"
+
+fdir=$(dirname -- $info_file)
+fname=$(basename -- $info_file)
+old=${fname%_Info.txt}
+latestId=$(zdcDB latest | cut -d':' -f2 | tr -d ' ')
+new="${ZDCROOT}/data/Run$latestId" 
+rename "s#${fdir}/$old#$new#" ${fdir}/${old}_*.txt
+
+${ROOT}/bin/parse ${latestId}
+
+pushd ${ROOT}
+sqlite3 -header -csv database/NSRL_test.db "SELECT * FROM runs;" > db.csv && mv db.csv database/
+git add database/NSRL_test.db database/db.csv
+popd
+exit 0

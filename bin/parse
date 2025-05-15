@@ -1,0 +1,41 @@
+#!/bin/bash
+
+script=$(realpath -- ${BASH_SOURCE[0]})
+ROOT=$(dirname $script)/..
+source ${ROOT}/setup.sh
+source ${ROOT}/lib/zdc.sh
+
+while [ $# -gt 0 ]
+do
+    run=$1
+    if ! `${ROOT}/bin/zdcDB query --run $run --field Type >> /dev/null`; then
+	logger fatal "not a valid run: $run" >&2
+	shift
+	continue
+    fi
+    run_type=$(${ROOT}/bin/zdcDB -p query --run $run --field Type | xargs)
+    list_file=$(getFile "Run${run}_list.txt")
+    fig_dir=${ROOT}/figures/${run}
+
+    if [ "$run_type" = "ptrg" ]; then
+	${ROOT}/bin/parse_ptrg -l $list_file -p "Run${run}" -d ${ROOT}/data
+	ped_file=$(getFile "Run${run}_ped.json")
+	[ -d $fig_dir ] || mkdir -p $fig_dir
+	${ROOT}/bin/plot_ptrg -p $list_file -p $ped_file -o ${fig_dir}
+    elif [ "$run_type" = "mip" ]; then
+	${ROOT}/bin/parse_mip -l $list_file -p "Run${run}" -d ${ROOT}/data
+	mip_file=$(getFile "Run${run}_mip.json")
+	[ -d $fig_dir ] || mkdir -p $fig_dir
+	${ROOT}/bin/plot_mip -p $list_file -p $mip_file -o ${fig_dir}
+    elif [ "$run_type" = "data" ]; then
+	${ROOT}/bin/zdc convert $run
+	${ROOT}/bin/zdc calibrate $run
+	${ROOT}/bin/zdc QA $run
+    fi
+    if [ $? -ne 0 ]; then
+	${ROOT}/bin/zdcDB update --run $run --field Flag --value bad
+    else
+	scp -qr ${ROOT}/figures/${run}/ weibin@cali:public/NSRL_test/figures/
+    fi
+    shift
+done

@@ -12,13 +12,13 @@ Conn = ''
 
 FIELDS = [ 'Run', 'Type', 'Flag', 
     'StartTime', 'StopTime', 'Length', 
-    'Geometry', 'Channels', 
+    'Channels', 
     # 'Beam1', 'Beam2',
     'Trigger', 'T1', 'T2',
     'Events', 'LG', 'HG', 'Ped', 'Vbias', 'Size', 
     'PedRun', 'MIPRun', 'TrgRate',
     'Note' ]
-TextFields = ['Type', 'Flag', 'StartTime', 'StopTime', 'Geometry', 'Size', 'Note']
+TextFields = ['Type', 'Flag', 'StartTime', 'StopTime', 'Size', 'Note']
 FreFields = [ 'Run', 'Type', 'Flag', 
     'StartTime', 'StopTime', 'Length', 
     'Trigger', 
@@ -34,7 +34,6 @@ FIELD_WIDTH = {
     'StartTime': 16, 
     'StopTime': 16, 
     'Length': 5,    # elapsed time in h
-    'Geometry': 8,
     'Channels': 3,  # number of good channels
     # 'Beam1': 6,
     # 'Beam2': 6,
@@ -226,7 +225,6 @@ def createTable():
                 StartTime text,
                 StopTime text,
                 Length integer,
-                Geometry integer,
                 Channels integer,
                 Trigger integer,
                 T1 float,
@@ -344,7 +342,6 @@ def insertToTable():
         values['StartTime'] = input('StartTime: ').strip()
         values['StopTime'] = input('StopTime: ').strip()
         values['Length'] = float(input('Length/h: '))
-        values['Geometry'] = input('Geometry: ').strip()
         values['Channels'] = int(input('#Channels: '))
         # values['Beam1'] = float(input('Beam1: ') or 100)
         # values['Beam2'] = float(input('Beam2: ') or 100)

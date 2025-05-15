@@ -42,18 +42,26 @@ if __name__ == '__main__':
         if runType != "ptrg":
             logger.error(f'Not a ptrg run: {run}')
             exit(4)
-        cmd = f'{binDir}/parse_ptrg {listFile} Run${run} {dataDir}'
+        cmd = f'{binDir}/parse_ptrg -l {listFile} -p Run${run} -d {dataDir}'
         result = subprocess.run(cmd, shell=True)
 
         figDir = f'{zdc.config["ZDCROOT"]}/figures/Run${run}'
         if not os.path.exists(figDir):
             os.mkdir(figDir)
-        cmd = f'{binDir}/plot_ptrg {pedFile} {figDir}'
+        cmd = f'{binDir}/plot_ptrg -p {pedFile} -o {figDir}'
         result = subprocess.run(cmd, shell=True)
     elif args.subcommand == 'mip':
         if runType != 'mip':
             logger.error(f'Not a MIP run: {run}')
             exit(4)
+        cmd = f'{binDir}/parse_mip -l {listFile} -p Run${run} -d {dataDir}'
+        result = subprocess.run(cmd, shell=True)
+
+        figDir = f'{zdc.config["ZDCROOT"]}/figures/Run${run}'
+        if not os.path.exists(figDir):
+            os.mkdir(figDir)
+        cmd = f'{binDir}/plot_mip -m {mipFile} -o {figDir}'
+        result = subprocess.run(cmd, shell=True)
     elif args.subcommand == 'convert':
         if runType != 'data':
             logger.error(f'Not a data run: {run}')

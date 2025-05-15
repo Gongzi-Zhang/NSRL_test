@@ -1,6 +1,6 @@
 /* const information about the prototype and run */
-#ifndef __zdc__
-#define __zdc__
+#ifndef __ZDC__
+#define __ZDC__
 
 #include <iostream>
 #include <vector>
@@ -17,7 +17,7 @@ namespace zdc {
     const char* ZDCROOT = (assert(getenv("ZDCROOT") != NULL), true)
 	? getenv("ZDCROOT")
 	: ".";
-    const char* ZDCBACKUP = "/media/arratialab/zdc/NSRL_test/";
+    const char* ZDCBACKUP = "/media/arratialab/CALI/NSRL_test/";
 
     // Run 2024
     const char* run24Start	= "2024-04-24";
@@ -38,25 +38,13 @@ namespace zdc {
     // Trigger
     map<int, const char*> trigger = 
     {
-	{-2,	"mip"}, 
-	{-1,	"ptrg"},
-	{0,	"others"},
-	{1,	"T1"},	{16,	"T1"},
-	{2,	"T2"},	{32,	"T2"},
-	{4,	"T3"},	{64,	"T3"},
-	{8,	"T4"},  {128,	"T4"},
-	{3,	"T1 && T2"},
-	{5,	"T1 && T3"},
-	{6,	"T2 && T3"},
-	{7,	"T1 && T2 && T3"},
-	{12,	"T3 && T4"},
-	{28,	"T1 || (T3 && T4)"},
-	{48,	"T1 || T2"},
-	{60,	"T1 || T2 || (T3 && T4)"},
-	{67,	"(T1 && T2) || T3"},
-	{112,	"T1 || T2 || T3"},
-	{131,	"(T1 && T2) || T4"},
-	{240,	"T1 && T2 && T3 && T4"},
+	{-2, "mip"}, 
+	{-1, "ptrg"},
+	{ 0, "others"},
+	{ 1, "T1"},
+	{ 2, "T2"},
+	{ 3, "T1 && T2"},
+	{ 4, "T1 || T2"},
     };
 
     // geometry and channels
@@ -67,28 +55,6 @@ namespace zdc {
      * quadrant:  quadrant count in a layer: 0-3
      * sipm:      SiPM count in a PCB: 0-6
      */
-    	  int nCAENs = 3;
-    const int CAENMax = 5;
-    const int nCAENChannels = 64;
-	  int nChannels = nCAENs*nCAENChannels;
-          int nLayers = 10;
-    const int layerMax = 20;
-	  int nHexLayers = 4;
-    const int transLayer = 4;	// Layer 5
-	  int nSqaLayers = 9;
-    const int nLayerBoards = 4;
-          int nHexBoards = nHexLayers*nLayerBoards;
-          int nSqaBoards = nSqaLayers*nLayerBoards;
-	  int nBoards = nHexBoards + nSqaBoards;
-    const int boardMax = 80;
-    const int nHexBoardChannels = 7;
-    const int nSqaBoardChannels = 4;
-          int nHexChannels = nHexBoards*nHexBoardChannels;
-          int nSqaChannels = nSqaBoards*nSqaBoardChannels;
-
-    const int nEightLayerBoards = 8*nLayerBoards;
-    const int nNineLayerBoards  = 9*nLayerBoards;
-    const int channelMax = 300;
 
     const float x0 = 65*cm;
     const float y0 = 0;
@@ -113,19 +79,7 @@ namespace zdc {
     void setRun(const int r)
     {
 	run = r;
-	if (run < 3)
-	{
-	    nCAENs = 1;
-	    nChannels = 56;
-	    nHexLayers = 2;
-	    nHexBoards = 8;
-	    nHexChannels = 56;
-	    nSqaLayers = 0;
-	    nSqaBoards = 0;
-	    nSqaChannels = 0;
-	    calo::setnCAENChannels({56});
-	}
-	else if (run < 4)
+	if (run < 4)
 	{
 	    nCAENs = 3;
 	    nChannels = 176;
@@ -328,7 +282,7 @@ namespace zdc {
 	char rootFile[1024];
 	char dirs[3][1024];
 	sprintf(dirs[0], ".");
-	sprintf(dirs[1], "%s/data", zdcROOT);
+	sprintf(dirs[1], "%s/data", ZDCROOT);
 	sprintf(dirs[2], "%s/data", backupDir);
 	for (char* dir : dirs)
 	{

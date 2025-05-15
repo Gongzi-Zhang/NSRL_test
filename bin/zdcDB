@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+
+from db import *
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--plain', '-p', action='store_true', help='use plain format')
+    subparsers = parser.add_subparsers(dest='subcommand', required=True)
+    
+    '''init command'''
+    parser_init = subparsers.add_parser('init', help='Initialize the database')
+
+    '''show command'''
+    parser_show = subparsers.add_parser('show', help='show the last 10 records')
+    parser_show.add_argument('--fields', '-f', action='store_true', help='show all fields (default limited columns)')
+    parser_show.add_argument('--entries', '-e', dest='sEntries', help='number of latest entries to show')
+    parser_show.add_argument('--all', '-a', action='store_true', required=False, help='show all records')
+
+    ''' insert command '''
+    parser_insert = subparsers.add_parser('insert', help='Insert record from a csv file')
+    parser_insert.add_argument('--Run',         dest='iRun', help='run number of each record; will be assigned by the system if not specifie')
+    parser_insert.add_argument('--Type',        dest='iType', choices=TYPES, required=True, help='type of the run')
+    parser_insert.add_argument('--Flag',        dest='iFlag', choices=FLAGS, help='flag of the run')
+    parser_insert.add_argument('--StartTime',   dest='iStartTime',  required=True)
+    parser_insert.add_argument('--StopTime',    dest='iStopTime',   required=True)
+    parser_insert.add_argument('--Length',      dest='iLength',     help='elapsed time in hour')
+    parser_insert.add_argument('--Channels',    dest='iChannels',   help='number of good channels')
+    # parser_insert.add_argument('--Beam1',       dest='iBeam1',      help='Beam 1 energy')
+    # parser_insert.add_argument('--Beam2',       dest='iBeam2',      help='Beam 2 energy')
+    parser_insert.add_argument('--Trigger',     dest='iTrigger',    required=True,  help='trigger logic')
+    parser_insert.add_argument('--T1',          dest='iT1',         help='trigger tile 1 threshold voltage')
+    parser_insert.add_argument('--T2',          dest='iT2',         help='trigger tile 2 threshold voltage')
+    parser_insert.add_argument('--Events',      dest='iEvents',     help='number of events')
+    parser_insert.add_argument('--Size',        dest='iSize',       help='list file size')
+    parser_insert.add_argument('--LG',          dest='iLG',         help='LG')
+    parser_insert.add_argument('--HG',          dest='iHG',         help='HG')
+    parser_insert.add_argument('--Ped',         dest='iPed',        help='pedestal position')
+    parser_insert.add_argument('--Vbias',       dest='iVbias',      help='bias voltage')
+    parser_insert.add_argument('--PedRun',      dest='iPedRun',     help='pedestal run')
+    parser_insert.add_argument('--MIPRun',      dest='iMIPRun',     help='MIP run')
+    parser_insert.add_argument('--TrgRate',     dest='iTrgRate',    help='trigger rate')
+    parser_insert.add_argument('--Note',        dest='iNote',       help='other info')
+
+    ''' insert from a file '''
+    parser_insertf = subparsers.add_parser('insertf', help='Insert record from a csv file')
+    parser_insertf.add_argument('--file', '-f', dest='iFile', required=True, help='which csv file to read from')
+
+    ''' update a record '''
+    parser_update = subparsers.add_parser('update', help='Update a record')
+    parser_update.add_argument('--run', dest='uRun', required=True, help='which record to update')
+    parser_update.add_argument('--field', dest='uField', required=True, help='which field to update')
+    parser_update.add_argument('--value', dest='uValue', required=True, help='updated value')
+
+    ''' query command '''
+    parser_query = subparsers.add_parser('query', help='query related record')
+    parser_query.add_argument('--run', dest='qRun', help='run number')
+    parser_query.add_argument('--fields', '-f', dest='qFields', default='*', help='what you want to grep')
+    parser_query.add_argument('--condition', '-c', dest='qCondition', default='1=1', help='filters')
+
+    ''' get latest run number '''
+    parser_latest = subparsers.add_parser('latest', help='get latest run number')
+
+    ''' export csv to a file '''
+    parser_export = subparsers.add_parser('export', help='export the database to a csv file')
+    parser_export.add_argument('--file', '-f', dest='eFile', required=True, help='file to export the db to')
+
+    args = parser.parse_args()
+
+    if not createConnection(DBName):
+        print('Error! cannot create the database connection.')
+        exit(4)
+
+    if args.plain:
+        setFormat(False)
+
+    if args.subcommand == 'init':
+        if not createTable():
+            exit(2)
+    elif args.subcommand == 'show':
+        entries = 10
+        if args.sEntries:
+            entries = int(args.sEntries)
+        fields = ','.join(FreFields)
+        if args.fields:
+            fields = '*'
+        sql = f'''SELECT {fields} FROM {TableName} ORDER BY Run DESC LIMIT {entries}'''
+        if args.all:
+            sql = f'''SELECT * FROM {TableName} ORDER BY Run DESC'''
+        if not showQuery(executeSql(sql)):
+            exit(3)
+    elif args.subcommand == 'insert':
+        record = {}
+        if args.iRun:
+            record['Run'] = int(args.iRun)
+        record['Type'] = args.iType
+        record['Flag'] = args.iFlag
+        record['StartTime'] = args.iStartTime
+        record['StopTime'] = args.iStopTime
+        if args.iLength:
+            record['Length'] = float(args.iLength)
+        # if args.iBeam1:
+        #     record['Beam1'] = float(args.iBeam1)
+        # if args.iBeam2:
+        #     record['Beam2'] = float(args.iBeam2)
+        if args.iChannels:
+            record['Channels'] = int(args.iChannels)
+        record['Trigger'] = int(args.iTrigger, 16)
+        if args.iT1:
+            record['T1'] = float(args.iT1)
+        if args.iT2:
+            record['T2'] = float(args.iT2)
+        if args.iEvents:
+            record['Events'] = int(args.iEvents)
+        if args.iSize:
+            record['Size'] = args.iSize
+        if args.iLG:
+            record['LG'] = int(args.iLG)
+        if args.iHG:
+            record['HG'] = int(args.iHG)
+        if args.iPed:
+            record['Ped'] = int(args.iPed)
+        if args.iVbias:
+            record['Vbias'] = float(args.iVbias)
+        if args.iPedRun:
+            record['PedRun'] = int(args.iPedRun)
+        if args.iMIPRun:
+            record['MIPRun'] = int(args.iMIPRun)
+        if args.iTrgRate:
+            record['TrgRate'] = float(args.iTrgRate)
+        if args.iNote:
+            record['Note'] = args.iNote
+        if not insertRecord(record):
+            exit(5)
+    elif args.subcommand == 'insertf':
+        if not insertRecords(args.iFile):
+            exit(3)
+    elif args.subcommand == 'update':
+        field = args.uField
+        if field not in FIELDS:
+            print(f'ERROR:\tinvalid field: {field}')
+            print(f'INFO:\tavailables fields: {FIELDS}')
+            exit(6)
+        sql = f'SELECT Run,{field} FROM {TableName} WHERE Run = {args.uRun};'
+        print(f'Values before updating: ')
+        showQuery(executeSql(sql))
+        if not updateRecord(args.uRun, field, args.uValue):
+            exit(3)
+        sql = f'SELECT Run,{field} FROM {TableName} WHERE Run = {args.uRun};'
+        print(f'Values after updating: ')
+        showQuery(executeSql(sql))
+    elif args.subcommand == 'query':
+        fields = args.qFields
+        cond = args.qCondition
+        if args.qRun:
+            cond = f'Run={args.qRun}'
+        if not showQuery(queryRecords(cond, args.qFields)):
+            exit(3)
+    elif args.subcommand == 'latest':
+        sql = f'SELECT Run FROM {TableName} ORDER BY Run DESC LIMIT 1;'
+        logger.debug(sql)
+        result = executeSql(sql)
+        for Run in result.fetchone():
+            print("Latest Run: ", Run)
+    elif args.subcommand == 'export':
+        if not exportRecords(args.eFile):
+            exit(6)
+
+    closeConnection() 
+    exit(0)

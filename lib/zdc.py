@@ -22,20 +22,11 @@ for i in range(0, config['nSiPMChannels']):
 config['ZDCROOT'] = os.environ['ZDCROOT']
 config['ZDCBACKUP'] = os.environ['ZDCBACKUP']
 
-def getListFile(run):
+def getFile(f):
     for dir in ['.', config['ZDCROOT'], config['ZDCBACKUP']]:
-        file = f'{dir}/Run{run}_list.txt'
+        file = f'{dir}/{f}'
         if os.path.exists(file):
             return file
     
-    logger.warning(f"Can't find list file for run {run}")
+    logger.warning(f"Can't find file {f}")
     return ""
-
-def getPedFile(run):
-    for dir in ['.', config['ZDCROOT'], config['ZDCBACKUP']]:
-        file = f'{dir}/Run{run}_ped.json'
-        if os.path.exists(file):
-            return file
-    
-    logger.warning(f"Can't find ped file for run {run}")
-    return ''

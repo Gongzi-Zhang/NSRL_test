@@ -9,7 +9,7 @@ def usage():
     print(sys.argv[0] + ' -l run_list.txt [-p prefix] [-d output_dir] ')
     print('\t-h: print this help message')
     print('\t-l: input list file')
-    print('\t-p: output prefix (the output will be prefix_hist.root and prefix_ped.json)')
+    print('\t-p: output prefix (the output will be prefix_hist.root and prefix_mip.json)')
     print('\t-d: output dir (the output root and json files will be stored in this dir.')
 
 if __name__ == '__main__':
@@ -36,7 +36,7 @@ if __name__ == '__main__':
             exit(1)
         i += 1
 
-    parser = Parser(listFile, outPrefix, outDir)                                                   
+    parser = Parser(listFile, outPrefix, outDir, "mip")                                                   
     parser.parse()                                                                                       
-    parser.fit_ptrg()    
+    parser.fit_mip()    
     parser.write()
