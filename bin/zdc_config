@@ -13,13 +13,13 @@ cm = 10
 
 config = {}
 config['unit'] = {'mm': mm, 'cm': cm}
-config['nCAENs'] = 6
+config['nCAENs'] = 9
 config['nChannelsPerCAEN'] = 64
 config['nCAENChannels'] = config['nCAENs']*config['nChannelsPerCAEN']
 # config['nCAENUsedChannels'] = [63, 62, 63, 62, 63, 62]
-config['nLayers'] = 15
+config['nLayers'] = 23
 config['nChannelsPerLayer'] = 25;
-config['nSiPMChannels'] = config['nLayers']*config['nChannelsPerLayer']
+config['nSiPMChannels'] = config['nLayers']*config['nChannelsPerLayer'] - 12
 config['gridSize'] = 5
 config['spacingXY'] = 48.8*mm
 config['spacingZ'] = 27.112*mm
@@ -55,7 +55,10 @@ def getChannelInfo(ch: int):
     if (caen_ch < 50):
         layer = layer + 2*(caen_unit%2) + caen_ch//config['nChannelsPerLayer']
     else:
-        layer += 4
+        if (layer == 20):
+            layer += 2
+        else:
+            layer += 4
         if (caen_unit%2 == 0 and caen_ch > 62) or (caen_unit%2 == 1 and caen_ch > 61):
             # unused channels
             return ChannelInfo(ch, -1, -1, 0, 0, 0)

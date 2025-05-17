@@ -18,19 +18,19 @@ do
     fig_dir=${ROOT}/figures/${run}
 
     if [ "$run_type" = "ptrg" ]; then
-	${ROOT}/bin/parse_ptrg -l $list_file -p "Run${run}" -d ${ROOT}/data
-	ped_file=$(getFile "Run${run}_ped.json")
-	[ -d $fig_dir ] || mkdir -p $fig_dir
-	${ROOT}/bin/plot_ptrg -p $ped_file -o ${fig_dir}
+        ${ROOT}/bin/parse_ptrg -l $list_file -p "Run${run}" -d ${ROOT}/data
+        ped_file=$(getFile "Run${run}_ped.json")
+        [ -d $fig_dir ] || mkdir -p $fig_dir
+        ${ROOT}/bin/plot_ptrg -p $ped_file -o ${fig_dir}
     elif [ "$run_type" = "mip" ]; then
-	${ROOT}/bin/parse_mip -l $list_file -p "Run${run}" -d ${ROOT}/data
-	# mip_file=$(getFile "Run${run}_mip.json")
-	# [ -d $fig_dir ] || mkdir -p $fig_dir
-	# ${ROOT}/bin/plot_mip -m $mip_file -o ${fig_dir}
+        ${ROOT}/bin/parse_mip -l $list_file -p "Run${run}" -d ${ROOT}/data
+        # mip_file=$(getFile "Run${run}_mip.json")
+        [ -d $fig_dir ] || mkdir -p $fig_dir
+        # ${ROOT}/bin/plot_mip -m $mip_file -o ${fig_dir}
     elif [ "$run_type" = "data" ]; then
-	${ROOT}/bin/zdc convert $run
-	${ROOT}/bin/zdc calibrate $run
-	${ROOT}/bin/zdc QA $run
+        ${ROOT}/bin/zdc convert $run
+        ${ROOT}/bin/zdc calibrate $run
+        ${ROOT}/bin/zdc QA $run
     fi
     if [ $? -ne 0 ]; then
 	${ROOT}/bin/zdcDB update --run $run --field Flag --value bad
