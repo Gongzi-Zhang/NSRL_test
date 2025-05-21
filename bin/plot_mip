@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+'''
+plot pedestal from a json file
+'''
+
+import os
+import sys
+import json
+import matplotlib.pyplot as plt
+from utilities import *
+import zdc
+
+config = zdc.config
+
+def plot(pedFile, mipFile, outputDir = '.'):
+    for f in [pedFile, mipFile]:
+        if not os.path.exists(f):
+            logger.error(f"File {f} doesn't exsit")
+            return
+
+    # load pedestal data
+    with open(pedFile, 'r') as f:
+        ped = json.load(f)
+
+    # load mip data
+    with open(mipFile, 'r') as f:
+        mip = json.load(f)
+
+    # plot
+    # plt.figure(figsize=(10, 6))
+    for gain in ['HG']:
+        ped_values = ped[gain]
+        mip_values = mip[gain]
+        channels = []
+        ped_mean = {}
+        ped_rms = {}
+        for ch, [m, r] in ped_values.items():
+            sipmCh = config['caen2sipm'][int(ch)] 
+            if sipmCh == -1:
+                continue
+            channels.append(sipmCh)
+            ped_mean[sipmCh] = m
+            ped_rms[sipmCh] = r
+
+        mip_mean = []
+        mip_rms = []
+        for ch, [m, _, r] in mip_values.items():
+            sipmCh = config['caen2sipm'][int(ch)] 
+            if sipmCh == -1:
+                continue
+            mip_mean.append(m - ped_mean[sipmCh])
+            mip_rms.append(r)
+
+        # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+        # ax1.scatter(channels, mip_mean, marker='o', color='b' )
+        # # ax1.xlabel('SiPM Channel')
+        # ax1.set_ylabel('mean [ADC]')
+        # ax1.set_title(f'{gain} MIP')
+        # ax1.grid()
+        # # plt.savefig(f'{outputDir}/{gain}_ped.png')
+
+
+        # ax2.scatter(channels, mip_rms, marker='o', color='b' )
+        # ax2.set_xlabel('SiPM Channel')
+        # ax2.set_ylabel('rms [ADC]')
+        # ax2.grid()
+
+        # fig.subplots_adjust(hspace=0)
+        # fig.savefig(f'{outputDir}/{gain}_mip.png')
+        # fig.clf()
+
+        plt.scatter(channels, mip_mean, marker='o', color='b' )
+        plt.xlabel('SiPM Channel')
+        plt.ylabel('mean [ADC]')
+        plt.title(f'{gain} MIP')
+        plt.grid()
+        plt.savefig(f'{outputDir}/{gain}_mip.png')
+
+def usage():
+    print(sys.argv[0] + ' -p ped.json -m mip.json [-o output_dir]')
+    print('\t-h: print this help message')
+    print('\t-p: input ped json file')
+    print('\t-m: input mip json file')
+    print('\t-o: ooutput dir for plots')
+
+if __name__ == '__main__':
+    # read in command line arguments
+    i=1
+    outDir = '.'
+    pedFile = ''
+    mipFile = ''
+    while i<len(sys.argv):
+        if '-h' == sys.argv[i]:
+            usage()
+            exit(0)
+        elif '-p' == sys.argv[i]:
+            pedFile = sys.argv[i+1]
+            i += 1
+        elif '-m' == sys.argv[i]:
+            mipFile = sys.argv[i+1]
+            i += 1
+        elif '-o' == sys.argv[i]:
+            outDir = sys.argv[i+1]
+            i += 1
+        else:
+            logger.error(f'Unknown argument {sys.argv[i]}')
+            exit(1)
+        i += 1
+
+    plot(pedFile, mipFile, outDir)

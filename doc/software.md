@@ -19,3 +19,11 @@
       or chaining: any 5 of them work fine, with 6 units, janus just freezes
       after starting a new run, and only the first statistics row is enabled, though 
       no update there either.
+
+# DRP
+    > sudo nmcli con mod "Wired connection 1" ipv4.addresses "192.168.1.10/24"
+    > sudo nmcli con mod "Wired connection 1" ipv4.method manual
+    >  sudo nmcli con up "Wired connection 1"
+    > Connections
+
+

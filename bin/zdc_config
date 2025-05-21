@@ -48,14 +48,14 @@ def getChannelInfo(ch: int):
     if (ch < 0 or ch >= config['nCAENChannels']):
         logger.error(f'Invalid channel number: {ch} (allowed values: 0-{config["nCAENChannels"]})')
         return
-    caen_unit = ch//config['nChannelsPerCAEN']
+    caen_unit = ch//config['nChannelsPerCAEN']  # count from 0
     caen_ch = ch%config['nChannelsPerCAEN']
     position_offset = 0
-    layer = 5*(caen_unit//2) 
+    layer = 5*(caen_unit//2)    # count from 0; every 2 CAEN units hold 5 layers
     if (caen_ch < 50):
         layer = layer + 2*(caen_unit%2) + caen_ch//config['nChannelsPerLayer']
     else:
-        if (layer == 20):
+        if (layer == 20):   # the last pair has only 1 CAEN unit
             layer += 2
         else:
             layer += 4
