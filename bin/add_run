@@ -153,5 +153,10 @@ ${ROOT}/bin/zdcDB export -f ${ROOT}/db.csv && mv ${ROOT}/db.csv ${ROOT}/database
 pushd ${ROOT}
 git add database/NSRL_test.db database/db.csv
 scp database/db.csv weibin@gpu:public/NSRL_test/database
+if [ $Size -lt 1024 ]; then
+    scp data/Run${latestId}_list.txt weibin@gpu:public/NSRL_test/data
+else
+    mv data/Run${latestId}_list.txt ${ZDCBACKUP}/data
+fi
 popd
 exit 0

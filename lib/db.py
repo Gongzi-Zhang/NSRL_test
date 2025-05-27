@@ -24,7 +24,7 @@ FreFields = [ 'Run', 'Type', 'Flag',
     'Trigger', 
     'Events', 'Size', 
     'Note' ]
-TYPES = ['ptrg', 'mip', 'cosmic', 'data', 'cmdata', 'test', 'junk']
+TYPES = ['ptrg', 'mip', 'cosmic', 'data', 'Si', 'Fe', 'P', 'He', 'C', 'cmdata', 'test', 'junk']
 FLAGS = ['good', 'bad', 'susp']
 
 FIELD_WIDTH = {
@@ -79,10 +79,10 @@ def checkValue(field, value):
         else:
             logger.error(f'Invalid run type: {value}. Allowed types: {TYPES}')
     elif 'Channels' == field:
-        if 1 <= value and value <= 560:
+        if 1 <= value and value <= 575:
             return True
         else:
-            logger.error(f'Invalid channel number: {value}. Allowed range [1, 560]')
+            logger.error(f'Invalid channel number: {value}. Allowed range [1, 575]')
 
     return False
 

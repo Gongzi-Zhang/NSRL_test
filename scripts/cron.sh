@@ -3,6 +3,7 @@
 script=$(realpath -- ${BASH_SOURCE[0]})
 ROOT=$(dirname $script)/..
 source ${ROOT}/setup.sh
+source /home/arratialab/local/root/bin/thisroot.sh
 
 RAW_DATA_DIR=$(realpath ${ROOT}/raw)
 

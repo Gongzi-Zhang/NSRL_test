@@ -119,7 +119,7 @@ def usage():
     print(sys.argv[0] + ' -l run_list.txt [-p prefix] [-d output_dir] ')
     print('\t-h: print this help message')
     print('\t-r: input hist root file')
-    print('\t-p: output file')
+    print('\t-o: output file')
 
 if __name__ == '__main__':
     # read in command line arguments

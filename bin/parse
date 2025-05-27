@@ -38,6 +38,5 @@ do
 	scp -qr ${ROOT}/figures/${run}/ weibin@gpu:public/NSRL_test/figures/
     fi
 
-    scp $list_file weibin@gpu:public/NSRL_test/data/
     shift
 done

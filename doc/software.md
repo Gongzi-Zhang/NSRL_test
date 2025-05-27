@@ -27,3 +27,12 @@
     > Connections
 
 
+# realVNC
+    > realVNC doesn't support wayland: 
+    uncomment the following statement in /etc/gdm3/custom.conf
+    WaylandEnable=false
+    Then reboot the laptop
+
+    > Unsupported authentication scheme:
+    In realVNC server:
+    option -> security -> VNC password
