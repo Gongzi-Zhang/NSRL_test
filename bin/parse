@@ -13,21 +13,23 @@ do
 	shift
 	continue
     fi
-    run_type=$(${ROOT}/bin/zdcDB -p query --run $run --field Type | xargs)
-    list_file=$(getFile "Run${run}_list.txt")
-    fig_dir=${ROOT}/figures/${run}
+    runType=$(${ROOT}/bin/zdcDB -p query --run $run --field Type | xargs)
+    listFile=$(getFile "Run${run}_list.txt")
+    figDir=${ROOT}/figures/${run}
 
-    if [ "$run_type" = "ptrg" ]; then
-        ${ROOT}/bin/parse_ptrg -l $list_file -p "Run${run}" -d ${ROOT}/data
-        ped_file=$(getFile "Run${run}_ped.json")
-        [ -d $fig_dir ] || mkdir -p $fig_dir
-        ${ROOT}/bin/plot_ptrg -p $ped_file -o ${fig_dir}
-    elif [ "$run_type" = "mip" ]; then
-        ${ROOT}/bin/parse_mip -l $list_file -p "Run${run}" -d ${ROOT}/data
-        # mip_file=$(getFile "Run${run}_mip.json")
-        [ -d $fig_dir ] || mkdir -p $fig_dir
-        # ${ROOT}/bin/plot_mip -m $mip_file -o ${fig_dir}
-    elif [ "$run_type" = "data" ]; then
+    if [ "$runType" = "ptrg" ]; then
+	rootFile="${ROOT}/data/Run${run}_hist.root"
+	pedFile="${ROOT}/data/Run${run}_ped.json"
+        ${ROOT}/bin/make_hist -i $listFile -o $rootFile
+        ${ROOT}/bin/fit_ptrg -i $rootFile -o $pedFile
+        ${ROOT}/bin/plot_ptrg -i $pedFile -o ${figDir}
+    elif [ "$runType" = "mip" ]; then
+	rootFile="${ROOT}/data/Run${run}_hist.root"
+	mipFile="${ROOT}/data/Run${run}_mip.json"
+        ${ROOT}/bin/make_hist -i $listFile -o $rootFile
+        ${ROOT}/bin/fit_mip -i $rootFp -o $mipFile
+        ${ROOT}/bin/plot_mip -i $mipFile -o $figDir
+    elif [ "$runType" = "data" ]; then
         ${ROOT}/bin/zdc convert $run
         ${ROOT}/bin/zdc calibrate $run
         ${ROOT}/bin/zdc QA $run

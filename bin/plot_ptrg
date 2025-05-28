@@ -23,6 +23,10 @@ def plot(pedFile, outputDir = '.'):
     with open(pedFile, 'r') as f:
         ped = json.load(f)
 
+    # check output dir
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
+
     # plot
     # plt.figure(figsize=(10, 6))
     for gain in ['LG', 'HG']:
@@ -57,9 +61,9 @@ def plot(pedFile, outputDir = '.'):
         fig.clf()
 
 def usage():
-    print(sys.argv[0] + ' -p ped.json [-o output_dir]')
+    print(sys.argv[0] + ' -i ped.json [-o output_dir]')
     print('\t-h: print this help message')
-    print('\t-p: input ped json file')
+    print('\t-i: input ped json file')
     print('\t-o: ooutput dir for plots')
 
 if __name__ == '__main__':
@@ -71,7 +75,7 @@ if __name__ == '__main__':
         if '-h' == sys.argv[i]:
             usage()
             exit(0)
-        elif '-p' == sys.argv[i]:
+        elif '-i' == sys.argv[i]:
             pedFile = sys.argv[i+1]
             i += 1
         elif '-o' == sys.argv[i]:

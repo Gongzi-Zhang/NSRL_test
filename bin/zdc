@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     runType = db.getRunType(run)
     runFlag = db.getRunFlag(run)
-    listFile = zdc.getListFile(run)
+    listFile = zdc.getFile(f'Run{run}_list.txt')
 
     if (runFlag != 'good'):
         logger.error(f'Not a good run: {run}')
