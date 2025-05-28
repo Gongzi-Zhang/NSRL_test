@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+import os
+import sys
+import json
+import ROOT
+from utilities import *
+from analysis import fit_ptrg
+import zdc
+
+def usage():
+    print(sys.argv[0] + ' -i run_hist.root [-o out_ped.json] ')
+    print('\t-h: print this help message')
+    print('\t-i: input root file')
+    print('\t-o: output json file')
+
+if __name__ == '__main__':
+    # read in command line arguments
+    i=1
+    rootFile = ''
+    pedFile = 'out_ped.json'
+    while i<len(sys.argv):
+        if '-h' == sys.argv[i]:
+            usage()
+            exit(0)
+        elif '-i' == sys.argv[i]:
+            rootFile = sys.argv[i+1]
+            i += 1
+        elif '-o' == sys.argv[i]:
+            pedFile = sys.argv[i+1]
+            i += 1
+        else:
+            logger.error(f'Unknown argument {sys.argv[i]}')
+            exit(1)
+        i += 1
+
+    if not os.path.isfile(rootFile):
+        logger.fatal(f'ROOT file not found: {rootFile}')
+        exit(4)
+
+    fin = ROOT.TFile.Open(rootFile)
+    ped = {}
+    for gain in ['LG', 'HG']:
+        ped[gain] = {}
+        for ch in range(0, zdc.config['nCAENChannels']):
+            hist = fin.Get(f'Ch_{ch}_{gain}')
+            [mean, rms] = fit_ptrg(hist)
+            if (mean == 0):
+                logger.warning('Failed fitting for ch {ch} {gain}')
+            ped[gain][ch] = [mean, rms]
+
+    with open(pedFile, 'w') as f:
+        json.dump(ped, f, indent=2, separators=(',', ': '))
