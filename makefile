@@ -2,6 +2,7 @@ SHELL       := /bin/bash
 CXXFLAGS    := -std=c++2a
 VPATH	    := include
 
+sqlite3_libs = -l sqlite3
 root_libs    = `root-config --libs --cflags`
 
 # include file
@@ -15,5 +16,9 @@ convert: convert.C $(cali_include)
 	g++ $(CXXFLAGS) -o $@ $^ $(root_libs)
 	mv convert bin/
 
-all: convert
+zdc: zdc.C
+	g++ $(CXXFLAGS) -o $@ $^ $(sqlite3_libs) $(root_libs)                   
+	mv $@ bin/   
+
+all: zdc
 # vim: set shiftwidth=4 softtabstop=4 tabstop=8: #

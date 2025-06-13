@@ -9,27 +9,52 @@ import json
 
 # units
 mm = 1
-cm = 10
+cm = 10*mm
+m  = 100*cm
+
+us = 1
+ms = 1e3*us
+s = 1e6*us
+
+GeV = 1
+MeV = 1e-3*GeV
+
 
 config = {}
-config['unit'] = {'mm': mm, 'cm': cm}
+config['unit'] = {
+    'mm': mm, 'cm': cm, 'm': m,
+    'us': us, 'ms': ms, 's': s,
+    'GeV': GeV, 'MeV': MeV,
+}
+config['gains'] = ['LG', 'HG']
 config['nCAENs'] = 9
 config['nChannelsPerCAEN'] = 64
 config['nCAENChannels'] = config['nCAENs']*config['nChannelsPerCAEN']
-# config['nCAENUsedChannels'] = [63, 62, 63, 62, 63, 62]
+config['nCAENUsedChannels'] = [64, 64, 64, 64, 64, 64, 64, 64, 64]
 config['nLayers'] = 23
 config['nChannelsPerLayer'] = 25;
 config['nSiPMChannels'] = config['nLayers']*config['nChannelsPerLayer'] - 12
 config['gridSize'] = 5
 config['spacingXY'] = 48.8*mm
 config['spacingZ'] = 27.112*mm
+config['zmax'] = config['nLayers']*config['spacingZ']
 config['boardLabels'] = {
-    0: 'E1',    1: 'O10', 2: 'E2',  3: 'O2',  4: 'E3',
-    5: 'O3',    6: 'E13', 7: 'O11', 8: 'E5',  9: 'O5',
+    0: 'E13',   1: 'O10', 2: 'E2',  3: 'O2',  4: 'E3',
+    5: 'O3',    6: 'E1',  7: 'O11', 8: 'E5',  9: 'O5',
     10: 'E6',  11: 'O6', 12: 'E7', 13: 'O7', 14: 'E8',
     15: 'O8',  16: 'E9', 17: 'O9', 18: 'E10',19: 'O1',
     20: 'E11', 21: 'O4', 22: 'E4',
 }
+config['trigger'] = {
+    -2: "mip",
+    -1: "ptrg",
+     0: "others",
+     1: "T1",
+     2: "T2",
+     3: "T1 && T2",
+     4: "T1 || T2",
+}
+
 config['caen2sipm'] = {}
 config['sipm2caen'] = {}
 config['sipmPos'] = {}

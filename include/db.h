@@ -11,8 +11,8 @@
 
 using namespace std;
 
-const std::string DBName = string(zdc::ZDCROOT) + "/database/NSRL_test.db";
-const char* TableName = "runs";
+const std::string zdcDbName = string(zdc::ZDCROOT) + "/database/NSRL_test.db";
+const char* zdcTableName = "runs";
 
 class zdcDB {
   private:
@@ -35,11 +35,13 @@ class zdcDB {
     int getRunTrigger(const int run);
     float getRunT1(const int run);
     float getRunT2(const int run);
+    float getRunT3(const int run);
+    float getRunT4(const int run);
 };
 
 zdcDB::zdcDB() 
 {
-    int rc = sqlite3_open(DBName.c_str(), &db);
+    int rc = sqlite3_open(zdcDbName.c_str(), &db);
     if (rc != SQLITE_OK)
     {
 	cerr << FATAL << "Can't connect to the database" << endl;
@@ -58,7 +60,7 @@ vector<int> zdcDB::getRuns(const char* cond)
 
     sqlite3_stmt* stmt;
     char sql[1024];
-    sprintf(sql, "SELECT Run FROM %s WHERE %s", TableName, cond);
+    sprintf(sql, "SELECT Run FROM %s WHERE %s", zdcTableName, cond);
     const char* errMsg = 0;
     int rc = sqlite3_prepare_v2(db, sql, strlen(sql), &stmt, &errMsg);
     if (rc == SQLITE_OK)
@@ -84,7 +86,7 @@ string zdcDB::getRunValue(const int run, const char* field)
 {
     sqlite3_stmt* stmt;
     char sql[1024];
-    sprintf(sql, "SELECT %s FROM %s WHERE Run = %d", field, TableName, run);
+    sprintf(sql, "SELECT %s FROM %s WHERE Run = %d", field, zdcTableName, run);
     const char* errMsg = 0;
     int rc = sqlite3_prepare_v2(db, sql, strlen(sql), &stmt, &errMsg);
     if (rc != SQLITE_OK)
@@ -159,5 +161,15 @@ float zdcDB::getRunT1(const int run)
 float zdcDB::getRunT2(const int run)
 {
     return stof(getRunValue(run, "T2"));
+}
+
+float zdcDB::getRunT3(const int run)
+{
+    return stof(getRunValue(run, "T3"));
+}
+
+float zdcDB::getRunT4(const int run)
+{
+    return stof(getRunValue(run, "T4"));
 }
 #endif

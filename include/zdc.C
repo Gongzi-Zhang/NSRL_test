@@ -4,16 +4,15 @@
 #include <string>
 
 #include "utilities.h"
-#include "calo.h"
 #include "zdc.h"
 #include "db.h"
 #include "analysis.h"
 #include "convert.h"
 #include "calibrate.h"
-#include "QA.h"
-#include "MIP.h"
-#include "makeMyrec.h"
-#include "clustering.h"
+// #include "QA.h"
+// #include "MIP.h"
+// #include "makeMyrec.h"
+// #include "clustering.h"
 
 using namespace std;
 
@@ -28,8 +27,8 @@ int main(int argc, char *argv[])
 
     string command = argv[1];
     const int run = atoi(argv[2]);
-    zdc::setRun(run);
-    caliDB db;
+    // zdc::setRun(run);
+    zdcDB db;
 
     string runType = db.getRunType(run);
     string runFlag = db.getRunFlag(run);
@@ -42,9 +41,9 @@ int main(int argc, char *argv[])
 
     if (command == "convert")
     {
-	if (runType != "mip" && runType != "data" && runType != "cmdata")
+	if (runType != "data" && runType != "cmdata")
 	{
-	    cout << ERROR << "not a data/mip run: " << run << endl;
+	    cout << ERROR << "not a data run: " << run << endl;
 	    exit(1);
 	}
 
@@ -54,29 +53,16 @@ int main(int argc, char *argv[])
 	string listFile = zdc::getListFile(run);
 	listReader* reader = new listReader(listFile.c_str());
 
-	if (runType == "data" || runType == "cmdata")
-	{
-	    eventBuilder *builder = new eventBuilder(reader);
-	    treeMaker *maker = new treeMaker(builder);
-	    maker->setStartTime(reader->getStartTime());
-	    maker->setOfName(outName);
-	    maker->init();
-	    maker->fill();
-	    maker->write();
+	eventBuilder *builder = new eventBuilder(reader);
+	treeMaker *maker = new treeMaker(builder);
+	maker->setStartTime(reader->getStartTime());
+	maker->setOfName(outName);
+	maker->init();
+	maker->fill();
+	maker->write();
 
-	    delete builder;
-	    delete maker;
-	}
-	else
-	{
-	    cosmicTreeMaker *maker = new cosmicTreeMaker(reader);
-	    maker->setStartTime(reader->getStartTime());
-	    maker->setOfName(outName);
-	    maker->init();
-	    maker->fill();
-	    maker->write();
-	    delete maker;
-	}
+	delete builder;
+	delete maker;
 
 	delete reader;
     }
@@ -123,6 +109,7 @@ int main(int argc, char *argv[])
 	cab->write();
 	delete cab;
     }
+    /*
     else if (command == "QA")
     {
 	if (runType != "data")
@@ -219,4 +206,5 @@ int main(int argc, char *argv[])
 	cs->process();
 	delete cs;
     }
+     */
 }
