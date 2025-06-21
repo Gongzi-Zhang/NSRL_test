@@ -138,12 +138,13 @@ void calibrate::fillCorADC()
 	    for (const auto& gain : zdc::gains)
 	    {
 		corADC[ch][gain] = rawADC[ch][gain] - ped[ch][gain].mean;
-		if (corADC[ch][gain] < 5*ped[ch][gain].rms)
+		if (corADC[ch][gain] < 3*ped[ch][gain].rms)
 		    corADC[ch][gain] = 0;
 	    }
 	    if (corADC[ch]["LG"] > 0 && corADC[ch]["HG"] < 7600 && corADC[ch]["HG"] > 0)
 		h2[ch]->Fill(corADC[ch]["LG"], corADC[ch]["HG"]);
 	}
+	tcor->Fill();
     }
 }
 
@@ -188,13 +189,14 @@ void calibrate::fillCorMIP()
 		    corMIP[ch][gain] = 0;
 	    }
 	}
+	tmip->Fill();
     }
 }
 
 void calibrate::write()
 {
     fio->cd();
-    // tcor->Write();
+    tcor->Write();
     tmip->Write();
     fio->Close();
 }

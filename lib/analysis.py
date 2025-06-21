@@ -14,6 +14,8 @@ Useful analysis functions:
 
 import os
 import ROOT
+import numpy as np
+from scipy.signal import savgol_filter, find_peaks
 from utilities import *
 import zdc
 
@@ -29,7 +31,7 @@ class Parser:
         self.h1 = {}
         self.xmax = {} 
         if mode == 'ptrg':
-            self.xmax = {'LG': 400, 'HG': 800}  
+            self.xmax = {'LG': 800, 'HG': 2000}  
         elif mode == 'mip':
             self.xmax = {'LG': 1000, 'HG': 8000}
         else:
@@ -123,14 +125,13 @@ def fit_mip(hist: ROOT.TH1F):
     name = hist.GetName()
 
     # Step 1: Extract bin contents and edges
-    values = hist.values()  # Bin contents 
-    edges = hist.axis().edges() # Bin edges
-    bin_centers = (edges[:-1] + edges[1:]) / 2  
+    bin_centers = np.array([hist.GetBinCenter(i) for i in range(1, hist.GetNbinsX() + 1)])
+    bin_values  = np.array([hist.GetBinContent(i) for i in range(1, hist.GetNbinsX() + 1)])
 
     # Step 2: Smooth the data to reduce noise
     window_length = 11  # Must be odd, adjust based on noise level
     polyorder = 2      # Polynomial order for smoothing
-    smoothed_values = savgol_filter(values, window_length, polyorder)
+    smoothed_values = savgol_filter(bin_values, window_length, polyorder)
 
     # Step 3: Detect peaks in the smoothed spectrum
     peaks, properties = find_peaks(smoothed_values, prominence=1, height=1)
@@ -145,7 +146,11 @@ def fit_mip(hist: ROOT.TH1F):
         return [0, 0, 0]
 
     # Pedestal peak is the highest significant peak
-    pedestal_peak_idx = peaks[bin_centers[peaks] > 100][0]
+    pedestal_peaks = peaks[bin_centers[peaks] > 100]
+    if (pedestal_peaks.size == 0):
+        logger.warning(f'No pedestal peak found in histogram {name}')
+        return [0, 0, 0]
+    pedestal_peak_idx = pedestal_peaks[0]
     pedestal_peak_x = bin_centers[pedestal_peak_idx]
 
     # Find the dip closest to 2000
@@ -159,15 +164,18 @@ def fit_mip(hist: ROOT.TH1F):
 
     # MIP peak is the highest peak after the dip
     peaks_after_dip = peaks[peaks > closest_dip_idx]
+    if (peaks_after_dip.size == 0):
+        logger.warning(f'No mip peak found in histogram {name}')
+        return [0, 0, 0]
     bin_contents = smoothed_values[peaks_after_dip]
     mip_peak_idx = peaks_after_dip[np.argmax(bin_contents)]
     mip_x = bin_centers[mip_peak_idx]
     landau = ROOT.TF1("landau", "landau", dip_x, 7000)
-    landau.SetParameters(smoothed_values[mip_peak_idx], mip_peak_x, 2*(mip_peak_x - dip_x))
+    landau.SetParameters(smoothed_values[mip_peak_idx], mip_x, 2*(mip_x - dip_x))
 
     hist.Fit(landau, 'qR')
 
     mpv = landau.GetParameter(1)
-    sigma = landau.Getparameter(2)
+    sigma = landau.GetParameter(2)
 
     return [pedestal_peak_x, mpv, sigma]

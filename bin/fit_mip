@@ -41,13 +41,13 @@ if __name__ == '__main__':
 
     fin = ROOT.TFile.Open(rootFile)
     mip = {}
-    for gain in ['LG', 'HG']:
-        ped[gain] = {}
+    for gain in ['HG']:
+        mip[gain] = {}
         for ch in range(0, zdc.config['nCAENChannels']):
             hist = fin.Get(f'Ch_{ch}_{gain}')
             [ped, mean, rms] = fit_mip(hist)
             if (mean == 0):
-                logger.warning('Failed fitting for ch {ch} {gain}')
+                logger.warning(f'Failed fitting for ch {ch} {gain}')
             mip[gain][ch] = [ped, mean, rms]
 
     with open(mipFile, 'w') as f:

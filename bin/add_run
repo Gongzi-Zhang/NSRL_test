@@ -94,6 +94,12 @@ if [ -f $sync_file ]; then
 	let i++
     done
 fi
+# if [ $Events -eq 0 ]; then
+#     logger warning "No event in the list file: $list_file"
+#     mv $info_file $list_file $sync_file $ROOT/work
+#     exit 0
+# fi
+
 LG=$(grep '\<LG\>' ${config} | cut -d':' -f2)
 HG=$(grep '\<HG\>' ${config} | cut -d':' -f2)
 Ped=$(grep '\<Ped\>' ${config} | cut -d':' -f2)

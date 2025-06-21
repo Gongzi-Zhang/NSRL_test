@@ -67,7 +67,7 @@ bool getMIP(const char* mipFileName, mip_t &res)
     {
 	for (int ch=0; ch<zdc::config["nCAENChannels"]; ch++)
 	{
-	    res[ch][gain] = mip[gain][to_string(ch)];
+	    res[ch][gain] = mip[gain][to_string(ch)][1];
 	}
     }
 

@@ -42,7 +42,7 @@ logger_test()
 # File
 getFile() 
 {
-    for dir in "." "${ZDCROOT}/data/" "${backupDir}/data/"; do
+    for dir in "." "${ZDCROOT}/data/" "${ZDCBACKUP}/data/"; do
 	f="${dir}/${1}"
 	if [ -f "$f" ]; then
 	    echo $f

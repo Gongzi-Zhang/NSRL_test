@@ -82,13 +82,13 @@ int main(int argc, char *argv[])
 	    exit(2);
 	}
 
-	const int mipRun = db.getMIPRun(run);
-	mip_t mip;
-	if (!getMIP(mipRun, mip))
-	{
-	    cerr << FATAL << "unable to read mip" << endl;
-	    exit(2);
-	}
+	// const int mipRun = db.getMIPRun(run);
+	// mip_t mip;
+	// if (!getMIP(mipRun, mip))
+	// {
+	//     cerr << FATAL << "unable to read mip" << endl;
+	//     exit(2);
+	// }
 	char buf[1024];
 	sprintf(buf, "Run%d.root", run);
 	string rootFile = zdc::getFile(buf);
@@ -102,10 +102,10 @@ int main(int argc, char *argv[])
 	cab->setRootFile(rootFile.c_str());
 	cab->setOutDir(buf);
 	cab->setPed(ped);
-	cab->setMIP(mip);
+	// cab->setMIP(mip);
 	cab->init();
 	cab->fillCorADC();
-	cab->fillCorMIP();
+	// cab->fillCorMIP();
 	cab->write();
 	delete cab;
     }
