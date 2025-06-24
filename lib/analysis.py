@@ -13,14 +13,15 @@ Useful analysis functions:
 '''
 
 import os
-import ROOT
 import numpy as np
 from scipy.signal import savgol_filter, find_peaks
+import json
+import ROOT
 from utilities import *
 import zdc
 
 class Parser:
-    def __init__(self, listFile, outFile, mode = 'ptrg'):
+    def __init__(self, listFile, outFile, pedFile = '', mode = 'ptrg'):
         self.listFile = listFile
         if not os.path.isfile(self.listFile):
             logger.fatal(f'list file not found: {self.listFile}')
@@ -28,7 +29,19 @@ class Parser:
 
         self.outFile = outFile
 
+        self.ped = {}
+        for gain in ['LG', 'HG']:
+            self.ped[gain] = {}
+            for ch in range(0, zdc.config['nCAENChannels']):
+                self.ped[gain][ch] = [0, 0]
+        if mode == 'mip':
+            if os.path.isfile(pedFile):
+                self.ped = get_ped(pedFile)
+            else:
+                logger.warning('No ped file specified, use 0 value')
+
         self.h1 = {}
+        self.h2 = {}
         self.xmax = {} 
         if mode == 'ptrg':
             self.xmax = {'LG': 800, 'HG': 2000}  
@@ -37,10 +50,14 @@ class Parser:
         else:
             self.xmax = {'LG': 1000, 'HG': 8000}
 
-        for gain in ['LG', 'HG']:
-            for ch in range(0, zdc.config['nCAENChannels']):
+        for ch in range(0, zdc.config['nCAENChannels']):
+            # 1D hist
+            for gain in ['LG', 'HG']:
                 hname = f'Ch_{ch}_{gain}'
                 self.h1[hname] = ROOT.TH1F(hname, hname, 200, 0, self.xmax[gain])
+            # 2D hist
+            hname = f'Ch_{ch}'
+            self.h2[hname] = ROOT.TH2F(hname, hname, 200, 0, self.xmax['LG'], 200, 0, self.xmax['HG'])
 
         for bd in range(0, zdc.config['nCAENs']):
             hname = f'Bd_{bd}_rate'
@@ -90,6 +107,9 @@ class Parser:
                 ch += 64*bd
                 if 0 < LG and LG < self.xmax['LG']:
                     self.h1[f'Ch_{ch}_LG'].Fill(LG) 
+                    if 0 < HG and HG < self.xmax['HG']:
+                        self.h2[f'Ch_{ch}'].Fill(LG - self.ped['LG'][ch][0], HG - self.ped['HG'][ch][0])
+
                 if 0 < HG and HG < self.xmax['HG']:
                     self.h1[f'Ch_{ch}_HG'].Fill(HG) 
 
@@ -103,7 +123,25 @@ class Parser:
         fout.cd()
         for h in self.h1.keys():
             self.h1[h].Write()
+        for h in self.h2.keys():
+            self.h2[h].Write()
         fout.Close()
+
+def get_ped(pedFile):
+    with open(pedFile, 'r') as f:
+        pedIn = json.load(f)
+
+    pedOut = {}
+    for gain in ['LG', 'HG']:
+        pedOut[gain] = {}
+        values = pedIn[gain]
+        for ch, [m, r] in values.items():
+            sipmCh = zdc.config['caen2sipm'][int(ch)] 
+            if sipmCh == -1:
+                continue
+            pedOut[gain][sipmCh] = [m, r]
+
+    return pedOut
 
 
 # fit a hist with a gaussian function to get the ped
@@ -179,3 +217,10 @@ def fit_mip(hist: ROOT.TH1F):
     sigma = landau.GetParameter(2)
 
     return [pedestal_peak_x, mpv, sigma]
+
+# fit a 2D hist to get the HG/LG ratio
+def fit_HG2LG(hist: ROOT.TH2F): 
+    profile = hist.ProfileX("profileX")
+    f1 = TF1("fit", "[0] + [1]*x", 0, 1000)
+    f1.SetParameters(0, 30)
+    profile.Fit(f1, "q R ROB=0.95")

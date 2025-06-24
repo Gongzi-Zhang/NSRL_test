@@ -7,7 +7,7 @@ void check_tree(const char* fname = "run.root")
     gROOT->SetBatch(1);
     gStyle->SetOptStat(111111);
     TFile * fin = new TFile(fname, "read");
-    TTree * traw = (TTree*) fin->Get("raw");
+    TTree * tin = (TTree*) fin->Get("raw");
 
     TCanvas* c = new TCanvas("c", "c", 3000, 3000);
     c->SaveAs("check.pdf[");
@@ -27,7 +27,7 @@ void check_tree(const char* fname = "run.root")
 	    c->cd(j+1);
 	    gPad->SetLogy(1);
 	    int caenCh = zdc::config["sipm2caen"][sipmCh];
-	    traw->Draw(Form("ch_%d.LG>>htemp%d", caenCh, sipmCh));
+	    tin->Draw(Form("ch_%d.LG>>htemp%d", caenCh, sipmCh));
 	    TH1F* htemp = (TH1F*)gDirectory->Get(Form("htemp%d", sipmCh));
 	    htemp->SetTitle(Form("Ch %d", sipmCh));
 	}
@@ -43,13 +43,13 @@ void check_tree(const char* fname = "run.root", const char* gain = "HG")
     gROOT->SetBatch(1);
     gStyle->SetOptStat(111111);
     TFile * fin = new TFile(fname, "read");
-    TTree * traw = (TTree*) fin->Get("raw");
+    TTree * tin = (TTree*) fin->Get("cor");
 
-    map<int, int> rawADC;
+    map<int, float> ADC;
     for (int ch=0; ch<zdc::config["nCAENChannels"]; ch++)
     {
-	TBranch *b = (TBranch*) traw->GetBranch(Form("ch_%d", ch));
-	b->GetLeaf(gain)->SetAddress(&rawADC[ch]);
+	TBranch *b = (TBranch*) tin->GetBranch(Form("ch_%d", ch));
+	b->GetLeaf(gain)->SetAddress(&ADC[ch]);
     }
 
     TGraph* g = new TGraph();
@@ -57,14 +57,14 @@ void check_tree(const char* fname = "run.root", const char* gain = "HG")
     TCanvas* c = new TCanvas("c", "c", 3000, 3000);
     c->SaveAs("check.pdf[");
 
-    for (int ei=0; ei<traw->GetEntries(); ei++)
+    for (int ei=0; ei<tin->GetEntries(); ei++)
     {
-	traw->GetEntry(ei);
+	tin->GetEntry(ei);
 
 	g->Clear();
 	g->SetTitle(Form("Event %d", ei));
 	g->SetMarkerStyle(20); // Small filled circle
-	g->SetMarkerSize(0.7); // Small size to avoid clutter
+	g->SetMarkerSize(1.5); // Small size to avoid clutter
 	g->SetMarkerColor(kBlue);
 
 	int pi = 0;
@@ -76,7 +76,9 @@ void check_tree(const char* fname = "run.root", const char* gain = "HG")
 		if (sipmCh >= zdc::config["nSiPMChannels"])
 		    continue;
 		int caenCh = zdc::config["sipm2caen"][sipmCh];
-		g->SetPoint(pi, sipmCh, rawADC[caenCh]);
+		if (ADC[caenCh] > 7800)
+		    continue;
+		g->SetPoint(pi, sipmCh, ADC[caenCh]);
 		pi++;
 	    }
 	}

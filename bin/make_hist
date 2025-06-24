@@ -11,13 +11,15 @@ def usage():
     print('\t-h: print this help message')
     print('\t-i: input list file')
     print('\t-o: output root file')
-    print('\t-m: mode')
+    print('\t-p: ped json file, needed for parsing mip runs')
+    print('\t-m: mode: ptrg [default], mip')
 
 if __name__ == '__main__':
     # read in command line arguments
     i=1
     listFile = ''
     rootFile = 'out_hist.root'
+    pedFile = ''
     mode = 'ptrg'
     while i<len(sys.argv):
         if '-h' == sys.argv[i]:
@@ -28,6 +30,9 @@ if __name__ == '__main__':
             i += 1
         elif '-o' == sys.argv[i]:
             rootFile = sys.argv[i+1]
+            i += 1
+        elif '-p' == sys.argv[i]:
+            pedFile = sys.argv[i+1]
             i += 1
         elif '-m' == sys.argv[i]:
             mode = sys.argv[i+1]
@@ -41,7 +46,7 @@ if __name__ == '__main__':
         logger.fatal(f'list file not found: {listFile}')
         exit(4)
 
-    parser = Parser(listFile, rootFile, mode)
+    parser = Parser(listFile, rootFile, pedFile, mode)
     parser.parse()
     parser.write()
 

@@ -50,11 +50,12 @@ def plot(pedFile, mipFile, outputDir = '.'):
 
         mip_mean = []
         mip_rms = []
-        for ch, [m, _, r] in mip_values.items():
+        for ch, [m, p, r] in mip_values.items():
             sipmCh = config['caen2sipm'][int(ch)] 
             if sipmCh == -1:
                 continue
             mip_mean.append(m - ped_mean[sipmCh])
+            # mip_mean.append(m - p)
             mip_rms.append(r)
 
         # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)

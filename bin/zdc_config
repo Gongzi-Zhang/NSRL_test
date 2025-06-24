@@ -95,7 +95,7 @@ def getChannelInfo(ch: int):
     col = position % config['gridSize']
     sipm_ch = layer*config['nChannelsPerLayer'] + position
 
-    x = (2 - col)*config['spacingXY']
+    x = -(2 - col)*config['spacingXY']
     y = (row - 2)*config['spacingXY']
     z = layer*config['spacingZ']
 
