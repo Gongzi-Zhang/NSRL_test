@@ -40,6 +40,8 @@ class Parser:
             else:
                 logger.warning('No ped file specified, use 0 value')
 
+        self.mode = mode
+
         self.h1 = {}
         self.h2 = {}
         self.xmax = {} 
@@ -50,14 +52,17 @@ class Parser:
         else:
             self.xmax = {'LG': 1000, 'HG': 8000}
 
+        # 1D hist
         for ch in range(0, zdc.config['nCAENChannels']):
-            # 1D hist
             for gain in ['LG', 'HG']:
                 hname = f'Ch_{ch}_{gain}'
                 self.h1[hname] = ROOT.TH1F(hname, hname, 200, 0, self.xmax[gain])
-            # 2D hist
-            hname = f'Ch_{ch}'
-            self.h2[hname] = ROOT.TH2F(hname, hname, 200, 0, self.xmax['LG'], 200, 0, self.xmax['HG'])
+
+        # 2D hist
+        if mode == 'mip':
+            for ch in range(0, zdc.config['nCAENChannels']):
+                hname = f'Ch_{ch}'
+                self.h2[hname] = ROOT.TH2F(hname, hname, 200, 0, self.xmax['LG'], 200, 0, self.xmax['HG'])
 
         for bd in range(0, zdc.config['nCAENs']):
             hname = f'Bd_{bd}_rate'
@@ -105,13 +110,24 @@ class Parser:
                     continue
 
                 ch += 64*bd
-                if 0 < LG and LG < self.xmax['LG']:
+                if (self.mode == 'ptrg'):
                     self.h1[f'Ch_{ch}_LG'].Fill(LG) 
-                    if 0 < HG and HG < self.xmax['HG']:
-                        self.h2[f'Ch_{ch}'].Fill(LG - self.ped['LG'][ch][0], HG - self.ped['HG'][ch][0])
-
-                if 0 < HG and HG < self.xmax['HG']:
                     self.h1[f'Ch_{ch}_HG'].Fill(HG) 
+                elif (self.mode == 'mip'):
+                    corLG = LG - self.ped['LG'][ch][0]
+                    corHG = HG - self.ped['HG'][ch][0]
+
+                    # exclude cross talk
+                    if (corHG / corLG < 13):
+                        continue
+
+                    if 0 < LG and LG < self.xmax['LG']:
+                        self.h1[f'Ch_{ch}_LG'].Fill(LG) 
+                        if 0 < HG and HG < self.xmax['HG']:
+                            self.h2[f'Ch_{ch}'].Fill(corLG, corHG)
+
+                    if 0 < HG and HG < self.xmax['HG']:
+                        self.h1[f'Ch_{ch}_HG'].Fill(HG) 
 
                 if (ts != 0):
                     self.h1[f'Bd_{bd}_rate'].Fill(1e6/(ts - TS[bd]))
@@ -136,10 +152,7 @@ def get_ped(pedFile):
         pedOut[gain] = {}
         values = pedIn[gain]
         for ch, [m, r] in values.items():
-            sipmCh = zdc.config['caen2sipm'][int(ch)] 
-            if sipmCh == -1:
-                continue
-            pedOut[gain][sipmCh] = [m, r]
+            pedOut[gain][int(ch)] = [m, r]
 
     return pedOut
 

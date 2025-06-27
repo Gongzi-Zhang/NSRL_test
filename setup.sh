@@ -1,6 +1,7 @@
 export ZDCROOT=$(realpath -- $(dirname -- ${BASH_SOURCE[0]}))
 export ZDCBACKUP="/media/arratialab/CALI/NSRL_test/"
 
+source "$ZDCROOT/lib/zdc.sh"
 # Function to add a path to an environment variable
 add_path_to() {
     local env_var="$1"  

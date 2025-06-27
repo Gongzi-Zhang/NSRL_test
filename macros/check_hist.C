@@ -26,8 +26,12 @@ void check_hist(const char* fname = "hist.root")
 	    gPad->SetLogy(1);
 	    int caenCh = zdc::config["sipm2caen"][sipmCh];
 	    TH1F* h = (TH1F*) fin->Get(Form("Ch_%d_HG", caenCh));
+	    h->SetTitle(Form("%d", sipmCh));
 	    if (h)
+	    {
 		h->Draw("HIST");
+		cout << sipmCh << "\t" <<  h->GetBinCenter(h->GetMaximumBin()) << endl;
+	    }
 	}
 	c->SaveAs("check.pdf");
     }

@@ -1,3 +1,15 @@
+# DRS
+```
+cd ~/local/drs4eb/software/bin
+./drsosc  &
+```
+## calibration
+config -> -0.05 to +0.95 V -> Execute Voltage Calibration
+## problem shooting
+* No DRS found, running in demo mode
+    > reboot DRS4
+
+
 # Janus_5202_3.6.0_20240514
 * Installation
     * OS: Ubuntu 22.04
