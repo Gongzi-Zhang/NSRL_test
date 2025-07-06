@@ -69,9 +69,9 @@ Length=-1
 Vbias=0
 
 if [ -f $info_file ]; then
-    StartTime=$(grep '\<Start Time\>' $info_file | cut -d ':' -f2-)
+    StartTime=$(grep '\<Start Time\>' $info_file | cut -d ':' -f2- | sed 's/\r$//')
     StartTime=$(extract_datetime "$StartTime")
-    StopTime=$(grep '\<Stop Time\>' $info_file | cut -d ':' -f2-)
+    StopTime=$(grep '\<Stop Time\>' $info_file | cut -d ':' -f2- | sed 's/\r$//')
     StopTime=$(extract_datetime "$StopTime")
     Length=$(grep '\<Elapsed time\>' $info_file | cut -d ' ' -f4)
     Length=$(perl -e "printf(\"%d\", $Length/60)")
@@ -158,10 +158,9 @@ ${ROOT}/bin/zdcDB export -f ${ROOT}/db.csv && mv ${ROOT}/db.csv ${ROOT}/database
 
 pushd ${ROOT}
 git add database/NSRL_test.db database/db.csv
-scp database/db.csv weibin@gpu:public/NSRL_test/database
-if [ $Size -lt 1024 ]; then
-    scp data/Run${latestId}_list.txt weibin@gpu:public/NSRL_test/data
-else
+# scp database/db.csv weibin@gpu:public/NSRL_test/database
+# scp data/Run${latestId}_list.txt weibin@gpu:public/NSRL_test/data
+if [ $Size -gt 1024 ]; then
     mv data/Run${latestId}_list.txt ${ZDCBACKUP}/data
 fi
 popd

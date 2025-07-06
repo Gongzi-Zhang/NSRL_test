@@ -1,5 +1,9 @@
 export ZDCROOT=$(realpath -- $(dirname -- ${BASH_SOURCE[0]}))
 export ZDCBACKUP="/media/arratialab/CALI/NSRL_test/"
+hostname=$(hostname)
+if [ "${hostname}" = "ucr-Lambda-Vector" ]; then
+    export ZDCBACKUP="/media/miguel/Elements_2024/NSRL_test/"
+fi
 
 source "$ZDCROOT/lib/zdc.sh"
 # Function to add a path to an environment variable
@@ -22,3 +26,6 @@ add_path_to PATH ${ZDCROOT}/bin
 add_path_to PYTHONPATH ${ZDCROOT}/lib
 add_path_to CPLUS_INCLUDE_PATH ${ZDCROOT}/include
 add_path_to LD_LIBRARY_PATH ${ZDCROOT}/lib
+
+# ROOT
+source ~/local/root/bin/thisroot.sh

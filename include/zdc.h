@@ -24,7 +24,7 @@ namespace zdc {
     const char* ZDCBACKUP = "/media/arratialab/CALI/NSRL_test/";
 
     // config
-    auto getConfig()
+    nlohmann::json getConfig()
     {
 	char buf[1024];
 	sprintf(buf, "%s/database/zdc_config.json", ZDCROOT);
