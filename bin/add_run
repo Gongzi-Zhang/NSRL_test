@@ -75,7 +75,14 @@ if [ -f $info_file ]; then
     StopTime=$(extract_datetime "$StopTime")
     Length=$(grep '\<Elapsed time\>' $info_file | cut -d ' ' -f4)
     Length=$(perl -e "printf(\"%d\", $Length/60)")
+    HG=$(grep 'HG_Gain' $info_file | awk '{print $2}')
+    LG=$(grep 'LG_Gain' $info_file | awk '{print $2}')
+    Ped=$(grep 'Ped' $info_file | awk '{print $2}')
     Vbias=$(grep 'HV_Vbias' ${info_file} | awk '{print $2}')
+else
+    HG=$(grep '\<HG\>' ${config} | cut -d':' -f2)
+    LG=$(grep '\<LG\>' ${config} | cut -d':' -f2)
+    Ped=$(grep '\<Ped\>' ${config} | cut -d':' -f2)
 fi
 
 Channels=$(grep '\<Channels\>' ${config} | cut -d':' -f2)
@@ -100,9 +107,6 @@ fi
 #     exit 0
 # fi
 
-LG=$(grep '\<LG\>' ${config} | cut -d':' -f2)
-HG=$(grep '\<HG\>' ${config} | cut -d':' -f2)
-Ped=$(grep '\<Ped\>' ${config} | cut -d':' -f2)
 Size=$(ls -lh --block-size=1MiB $list_file | awk '{print $5}')
 PedRun=$(grep '\<PedRun\>' ${config} | cut -d':' -f2)
 if [ "$run_type" = "ptrg" ]; then

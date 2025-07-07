@@ -18,6 +18,7 @@ for i in range(0, config['nCAENChannels']):
     config['caen2sipm'][i] = config['caen2sipm'][str(i)]
 for i in range(0, config['nSiPMChannels']):
     config['sipm2caen'][i] = config['sipm2caen'][str(i)]
+    config['sipmPos'][i] = config['sipmPos'][str(i)]
 
 config['ZDCROOT'] = os.environ['ZDCROOT']
 config['ZDCBACKUP'] = os.environ['ZDCBACKUP']

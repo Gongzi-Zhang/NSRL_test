@@ -16,6 +16,9 @@ do
     runType=$(${ROOT}/bin/zdcDB -p query --run $run --field Type | xargs)
     listFile=$(getFile "Run${run}_list.txt")
     figDir=${ROOT}/figures/${run}
+    if ! [ -d $figDir ]; then
+	mkdir $figDir
+    fi
 
     if [ "$runType" = "ptrg" ]; then
 	rootFile="${ROOT}/data/Run${run}_hist.root"
@@ -26,13 +29,15 @@ do
         ${ROOT}/bin/fit_ptrg -i $rootFile -o $pedFile
         ${ROOT}/bin/plot_ptrg -i $pedFile -o ${figDir}
     elif [ "$runType" = "mip" ]; then
-	rootFile="${ROOT}/data/Run${run}_hist.root"
-	mipFile="${ROOT}/data/Run${run}_mip.json"
-	if ! [ -f "$rootFile" ]; then
-	    ${ROOT}/bin/make_hist -i $listFile -o $rootFile -m "mip"
-	fi
+	rootFile="${ROOT}/data1/Run${run}_hist.root"
+	mipFile="${ROOT}/data1/Run${run}_mip.json"
+	pedRun=$(${ROOT}/bin/zdcDB -p query --run $run --field PedRun | xargs)
+	pedFile=$(getFile "Run${pedRun}_ped.json")
+	# if ! [ -f "$rootFile" ]; then
+	    ${ROOT}/bin/make_hist -i $listFile -o $rootFile -p $pedFile -m "mip"
+	# fi
         ${ROOT}/bin/fit_mip -i $rootFile -o $mipFile
-        ${ROOT}/bin/plot_mip -i $mipFile -o $figDir
+        ${ROOT}/bin/plot_mip -i $mipFile -o $figDir -p $pedFile
     elif [ "$runType" = "data" ] || [ "$runType" = "cmdata" ]; then
 	rootFile="${ROOT}/data/Run${run}.root"
 	if ! [ -f "$rootFile" ]; then

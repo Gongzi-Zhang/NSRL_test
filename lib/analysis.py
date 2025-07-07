@@ -118,7 +118,7 @@ class Parser:
                     corHG = HG - self.ped['HG'][ch][0]
 
                     # exclude cross talk
-                    if (corHG / corLG < 13):
+                    if (corHG / corLG < 12):
                         continue
 
                     if 0 < LG and LG < self.xmax['LG']:
